@@ -88,6 +88,12 @@ variable "worker_count" {
   description = "Number of woker nodes"
 }
 
+variable "complete_count" {
+  type        = number
+  default     = 0
+  description = "Number of complete nodes (should be odd number...)"
+}
+
 variable "master_flavor_name" {
   type        = string
   description = "Master flavor name"
@@ -103,6 +109,11 @@ variable "edge_flavor_name" {
   type        = string
   default     = null
   description = "Edge flavor name. Will use worker_flavor_name if not set"
+}
+
+variable "complete_flavor_name" {
+  type        = string
+  description = "Complete flavor name"
 }
 
 variable "master_server_affinity" {
@@ -121,6 +132,12 @@ variable "edge_server_affinity" {
   type        = string
   default     = "soft-anti-affinity"
   description = "Edge server group affinity"
+}
+
+variable "complete_server_affinity" {
+  type        = string
+  default     = "soft-anti-affinity"
+  description = "Complete server group affinity"
 }
 
 variable "nodes_config_drive" {
@@ -184,6 +201,12 @@ variable "edge_labels" {
   type        = map(string)
   default     = { "node-role.kubernetes.io/worker" = "true" }
   description = "Edge labels. Ingress controller will run on nodes with egde label"
+}
+
+variable "complete_labels" {
+  type        = map(string)
+  default     = { "node-role.kubernetes.io/master" = "true", "node-role.kubernetes.io/edge" = "true", "node-role.kubernetes.io/worker" = "true" }
+  description = "Complete labels. Ingress controller will run on nodes with egde label"
 }
 
 variable "kubernetes_version" {
