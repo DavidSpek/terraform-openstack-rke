@@ -18,6 +18,11 @@ output "worker_nodes" {
   description = "The worker nodes"
 }
 
+ output "complete_nodes" {
+  value       = module.complete.nodes
+  description = "The complete nodes"
+}
+ 
 output "rke_cluster" {
   value       = module.rke.rke_cluster
   description = "RKE cluster spec"
