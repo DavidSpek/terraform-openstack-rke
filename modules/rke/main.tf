@@ -47,6 +47,22 @@ resource "null_resource" "wait_for_worker_ssh" {
   }
 }
 
+resource "null_resource" "wait_for_complete_ssh" {
+  count = length(var.complete_nodes)
+  triggers = {
+    node_instance_id = var.complete_nodes[count.index].id
+  }
+  connection {
+    host        = var.complete_nodes[count.index].floating_ip
+    user        = var.system_user
+    private_key = var.use_ssh_agent ? null : file(var.ssh_key_file)
+    agent       = var.use_ssh_agent
+  }
+  provisioner "remote-exec" {
+    inline = ["# Connected to ${var.complete_nodes[count.index].name}"]
+  }
+}
+
 data "openstack_identity_auth_scope_v3" "scope" {
   name = "auth_scope"
 }
@@ -54,7 +70,7 @@ data "openstack_identity_auth_scope_v3" "scope" {
 resource "rke_cluster" "cluster" {
 
   depends_on = [var.rke_depends_on, null_resource.wait_for_master_ssh,
-  null_resource.wait_for_edge_ssh, null_resource.wait_for_worker_ssh]
+  null_resource.wait_for_edge_ssh, null_resource.wait_for_worker_ssh, null_resource.wait_for_complete_ssh]
 
   dynamic nodes {
     for_each = var.master_nodes
@@ -89,6 +105,18 @@ resource "rke_cluster" "cluster" {
       user              = var.system_user
       role              = ["worker"]
       labels            = var.worker_labels
+    }
+  }
+  
+  dynamic nodes {
+    for_each = var.complete_nodes
+    content {
+      address           = nodes.value.floating_ip != "" ? nodes.value.floating_ip : nodes.value.internal_ip
+      internal_address  = nodes.value.internal_ip
+      hostname_override = nodes.value.name
+      user              = var.system_user
+      role              = ["controlplane", "etcd", "worker"]
+      labels            = var.complete_labels
     }
   }
 
