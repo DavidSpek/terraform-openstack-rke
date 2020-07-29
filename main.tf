@@ -73,16 +73,35 @@ module "worker" {
   user_data        = var.user_data_file != null ? file(var.user_data_file) : null
 }
 
+module "complete" {
+  source             = "./modules/node"
+  node_depends_on    = [module.network.nodes_subnet]
+  name_prefix        = "${var.cluster_name}-complete"
+  nodes_count        = var.complete_count
+  image_name         = var.image_name
+  flavor_name        = var.complete_flavor_name
+  keypair_name       = module.keypair.keypair_name
+  network_name       = module.network.nodes_net_name
+  secgroup_name      = module.secgroup.secgroup_name
+  server_affinity    = var.complete_server_affinity
+  assign_floating_ip = "true"
+  config_drive       = var.nodes_config_drive
+  floating_ip_pool   = var.public_net_name
+  user_data          = var.user_data_file != null ? file(var.user_data_file) : null
+}    
+    
 module "rke" {
   source = "./modules/rke"
   rke_depends_on = [module.master.associate_floating_ip,
     module.edge.associate_floating_ip,
     module.worker.associate_floating_ip,
+    module.complete.associate_floating_ip,
     module.network.router_interface,
   module.secgroup.secgroup_rules]
   master_nodes      = module.master.nodes
   worker_nodes      = module.worker.nodes
   edge_nodes        = module.edge.nodes
+  complete_nodes    = module.complete.nodes
   system_user       = var.system_user
   ssh_key_file      = var.ssh_key_file
   use_ssh_agent     = var.use_ssh_agent
@@ -92,6 +111,7 @@ module "rke" {
   master_labels     = var.master_labels
   edge_labels       = var.edge_labels
   worker_labels     = var.worker_labels
+  complete_labels   = var.complete_labels
   k8s_version       = var.kubernetes_version
   mtu               = var.cni_mtu
   cloud_provider    = var.cloud_provider
