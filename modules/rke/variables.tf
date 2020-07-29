@@ -12,6 +12,9 @@ variable "worker_nodes" {
 variable "edge_nodes" {
 }
 
+variable "complete_nodes" {
+}
+
 variable "system_user" {
   type = string
 }
@@ -46,6 +49,10 @@ variable "worker_labels" {
 }
 
 variable "edge_labels" {
+  type = map(string)
+}
+
+variable "complete_labels" {
   type = map(string)
 }
 
